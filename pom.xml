@@ -21,6 +21,9 @@
 		<java.version>1.8</java.version>
 		<activiti.version>7.1.0.M2</activiti.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+
+        <!-- 第三方jar -->
+        <mysql-connector-java.version>5.1.34</mysql-connector-java.version>
 	</properties>
 
 	<dependencyManagement>
@@ -50,6 +53,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
+            <version>${mysql-connector-java.version}</version>
 		</dependency>
 		<!-- mybatis -->
 		<dependency>

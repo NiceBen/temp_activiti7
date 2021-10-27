@@ -14,11 +14,14 @@ import java.util.zip.ZipInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.runtime.ProcessInstanceQuery;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -188,7 +191,7 @@ public class ProcessController extends BaseController {
 	}
 
 	/**
-	 * 
+	 *
 	 * 功能描述:启动流程
 	 *
 	 * @param request
@@ -293,6 +296,44 @@ public class ProcessController extends BaseController {
 	}
 
 	/**
+	 * 流程实例是否被挂起
+	 *
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@PostMapping("/instance/isSuspend")
+	@ResponseBody
+	public String isSuspend(HttpServletRequest request, HttpServletResponse response) {
+		String processInstanceId = request.getParameter("processInstanceId");
+		boolean suspended = false;
+		try {
+			ProcessInstanceQuery query = runtimeService.createProcessInstanceQuery();
+			ProcessInstance processInstance = query.processInstanceId(processInstanceId).singleResult();
+			suspended = processInstance.isSuspended();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "processInstanceID：" + processInstanceId + ",流程实例处于：" + (suspended?"挂起状态":"激活状态");
+	}
+
+	@PostMapping("/definition/isSuspend")
+	@ResponseBody
+	public String isSuspend2(HttpServletRequest request, HttpServletResponse response) {
+		String processDefinitionKey = request.getParameter("processDefinitionKey");
+		boolean suspended = false;
+		try {
+			ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
+					.processDefinitionKey(processDefinitionKey).singleResult();
+			suspended = processDefinition.isSuspended();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "processDefinitionKey：" + processDefinitionKey + ",流程定义处于：" + (suspended?"挂起状态":"激活状态");
+	}
+
+	/**
 	 * 
 	 * 功能描述:流程定义挂起
 	 *
@@ -372,17 +413,17 @@ public class ProcessController extends BaseController {
 	@ResponseBody
 	public String activateProcessDefinition(HttpServletRequest request, HttpServletResponse response) {
 
-		String processDefinitionId = request.getParameter("processDefinitionId");
+		String processDefinitionKey = request.getParameter("processDefinitionKey");
 
-		if (StringUtils.isEmpty(processDefinitionId)) {
+		if (StringUtils.isEmpty(processDefinitionKey)) {
 			return "param error";
 		}
 
 		try {
 			// 根据一个流程定义的id挂起该流程实例
-			repositoryService.activateProcessDefinitionById(processDefinitionId);
+			repositoryService.activateProcessDefinitionByKey(processDefinitionKey);
 			ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
-					.processDefinitionKey(processDefinitionId).singleResult();
+					.processDefinitionKey(processDefinitionKey).singleResult();
 			System.out.println("流程定义ID:" + processDefinition.getId());
 			System.out.println("流程定义状态:" + processDefinition.isSuspended());
 			System.out.println("*****************************************************************************");
