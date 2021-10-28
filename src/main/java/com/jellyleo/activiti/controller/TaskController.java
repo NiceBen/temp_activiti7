@@ -18,6 +18,7 @@ import org.activiti.engine.task.Task;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -188,6 +189,19 @@ public class TaskController extends BaseController {
 				System.out.println("流程实例ID:" + processInstanceId);
 				System.out.println("*****************************************************************************");
 				return "success";
+			} else {
+				List<Task> list = taskService.createTaskQuery().processInstanceId(processInstanceId).active().list();
+				for (Task task : list) {
+					System.out.println("任务ID:" + task.getId());
+					System.out.println("任务名称:" + task.getName());
+					System.out.println("任务的创建时间:" + task.getCreateTime());
+					System.out.println("任务的办理人:" + task.getAssignee());
+					System.out.println("流程实例ID：" + task.getProcessInstanceId());
+					System.out.println("执行对象ID:" + task.getExecutionId());
+					System.out.println("流程定义ID:" + task.getProcessDefinitionId());
+					System.out.println("*****************************************************************************");
+				}
+
 			}
 		} catch (Exception e) {
 			return "fail";
@@ -206,10 +220,10 @@ public class TaskController extends BaseController {
 	 */
 	@RequestMapping(value = "/complete")
 	@ResponseBody
-	public String complete(HttpServletRequest request, HttpServletResponse response) {
+	public String complete(HttpServletRequest request, HttpServletResponse response, @RequestBody CommonVariable variable) {
 
-		String taskId = request.getParameter("taskid");
-		String variable = request.getParameter("variable");
+		String taskId = request.getParameter("taskId");
+//		String variable = request.getParameter("variable");
 
 		if (StringUtils.isEmpty(taskId)) {
 			return "param error";
@@ -218,8 +232,8 @@ public class TaskController extends BaseController {
 		try {
 			Map<String, Object> variables = new HashMap<>();
 			if (!StringUtils.isEmpty(variable)) {
-				CommonVariable variablesEntity = JSON.parseObject(variable, CommonVariable.class);
-				variables = BeanUtil.beanToMap(variablesEntity);
+//				CommonVariable variablesEntity = JSON.parseObject(variable, CommonVariable.class);
+				variables = BeanUtil.beanToMap(variable);
 			}
 //			// 设置流程参数（单）
 //			taskService.setVariable(taskId, key, value);

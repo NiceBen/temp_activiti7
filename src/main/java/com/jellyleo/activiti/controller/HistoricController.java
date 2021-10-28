@@ -5,7 +5,11 @@
  */
 package com.jellyleo.activiti.controller;
 
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +18,7 @@ import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.task.Task;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +34,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping("/history")
 public class HistoricController extends BaseController {
+
+	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	/**
 	 * 
@@ -84,12 +91,13 @@ public class HistoricController extends BaseController {
 
 		try {
 			List<HistoricActivityInstance> list = historyService.createHistoricActivityInstanceQuery()
-					.processInstanceId(processInstanceId).list();
+					.processInstanceId(processInstanceId).orderByHistoricActivityInstanceStartTime().asc().list();
 			if (list != null && list.size() > 0) {
 				for (HistoricActivityInstance hai : list) {
 					System.out.println(hai.getId());
 					System.out.println("步骤ID：" + hai.getActivityId());
 					System.out.println("步骤名称：" + hai.getActivityName());
+					System.out.println("开始时间：" + hai.getStartTime());
 					System.out.println("执行人：" + hai.getAssignee());
 					System.out.println("*****************************************************************************");
 				}
@@ -121,11 +129,14 @@ public class HistoricController extends BaseController {
 
 		try {
 			List<HistoricTaskInstance> list = historyService.createHistoricTaskInstanceQuery()
-					.processInstanceId(processInstanceId).list();
+					.processInstanceId(processInstanceId)
+					.orderByHistoricTaskInstanceStartTime().asc()
+					.list();
 			if (list != null && list.size() > 0) {
 				for (HistoricTaskInstance hti : list) {
 					System.out.println("任务ID:" + hti.getId());
 					System.out.println("任务名称:" + hti.getName());
+					System.out.println("任务开始时间:" + format.format(hti.getStartTime()));
 					System.out.println("流程定义ID:" + hti.getProcessDefinitionId());
 					System.out.println("办理人:" + hti.getAssignee());
 					System.out.println("*****************************************************************************");
@@ -158,17 +169,48 @@ public class HistoricController extends BaseController {
 
 		try {
 			List<HistoricVariableInstance> list = historyService.createHistoricVariableInstanceQuery()
-					.processInstanceId(processInstanceId).list();
+					.processInstanceId(processInstanceId)
+					.list();
 			if (list != null && list.size() > 0) {
 				System.out.println("流程实例ID:" + processInstanceId);
+				Map<String, Map<String, Object>> maps = new HashMap<>();
 				for (HistoricVariableInstance hvi : list) {
-					System.out.println("任务ID:" + hvi.getTaskId());
-					System.out.println("变量:[" + hvi.getVariableName() + "=" + hvi.getValue() + "]");
-					System.out.println("*****************************************************************************");
+					String taskId = hvi.getTaskId();
+					if (maps.containsKey(taskId)) {
+						Map<String, Object> subMap = maps.get(taskId);
+//						if (subMap == null) {
+//							subMap = new HashMap<>();
+//						}
+						subMap.put(hvi.getVariableName(), hvi.getValue());
+					} else {
+						Map<String, Object> newMap = new HashMap<>();
+						newMap.put(hvi.getVariableName(), hvi.getValue());
+						maps.put(taskId, newMap);
+					}
+//					System.out.println("任务ID:" + hvi.getTaskId());
+//					System.out.println("变量:[" + hvi.getVariableName() + "=" + hvi.getValue() + "]");
+//					System.out.println("*****************************************************************************");
 				}
+
+				Set<String> keySet = maps.keySet();
+				keySet.stream().forEach(key -> {
+					Map<String, Object> subMap = maps.get(key);
+					System.out.println("任务ID:" + key);
+					String name = "null";
+					if (StringUtils.hasText(key)) {
+						name = historyService.createHistoricTaskInstanceQuery().taskId(key).singleResult().getName();
+					}
+					System.out.println("任务名称：" + name);
+					Set<String> keySet1 = subMap.keySet();
+					keySet1.forEach(key1 -> {
+						System.out.println("变量:[" + key1 + "=" + subMap.get(key1) + "]");
+					});
+					System.out.println("*****************************************************************************");
+				});
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			return "fail";
 		}
 		return "success";

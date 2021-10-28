@@ -40,4 +40,6 @@ public class CommonVariable {
 	private Integer sendout;
 
 	private Integer pass;
+
+	private Integer result;
 }
