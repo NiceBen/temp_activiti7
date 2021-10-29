@@ -199,11 +199,11 @@ public class ProcessController extends BaseController {
 	 * @see [相关类/方法](可选)
 	 * @since [产品/模块版本](可选)
 	 */
-	@RequestMapping(value = "/start")
+	@RequestMapping(value = "/startByKey")
 	@ResponseBody
-	public String start(HttpServletRequest request, HttpServletResponse response) {
+	public String startByKey(HttpServletRequest request, HttpServletResponse response) {
 
-		String processDefinitionKey = request.getParameter("processId");
+		String processDefinitionKey = request.getParameter("processDefinitionKey");
 		String variable = request.getParameter("variable");
 
 		if (StringUtils.isEmpty(processDefinitionKey)) {
@@ -218,6 +218,48 @@ public class ProcessController extends BaseController {
 			}
 
 			ProcessInstance instance = runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
+//			// Businesskey:业务标识，通常为业务表的主键，业务标识和流程实例一一对应。业务标识来源于业务系统。存储业务标识就是根据业务标识来关联查询业务系统的数据
+//			ProcessInstance instance = runtimeService.startProcessInstanceByKey(processDefinitionKey, businessKey,
+//					variables);
+
+			System.out.println("流程实例ID:" + instance.getId());
+			System.out.println("流程定义ID:" + instance.getProcessDefinitionId());
+			System.out.println("*****************************************************************************");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "fail";
+		}
+		return "success";
+	}
+
+	/**
+	 *
+	 * 功能描述:启动流程
+	 *
+	 * @param request
+	 * @param response
+	 * @see [相关类/方法](可选)
+	 * @since [产品/模块版本](可选)
+	 */
+	@RequestMapping(value = "/startById")
+	@ResponseBody
+	public String startById(HttpServletRequest request, HttpServletResponse response) {
+
+		String processDefinitionId = request.getParameter("processDefinitionId");
+		String variable = request.getParameter("variable");
+
+		if (StringUtils.isEmpty(processDefinitionId)) {
+			return "param error";
+		}
+
+		try {
+			Map<String, Object> variables = new HashMap<>();
+			if (!StringUtils.isEmpty(variable)) {
+				CommonVariable variablesEntity = JSON.parseObject(variable, CommonVariable.class);
+				variables = BeanUtil.beanToMap(variablesEntity);
+			}
+
+			ProcessInstance instance = runtimeService.startProcessInstanceById(processDefinitionId, variables);
 //			// Businesskey:业务标识，通常为业务表的主键，业务标识和流程实例一一对应。业务标识来源于业务系统。存储业务标识就是根据业务标识来关联查询业务系统的数据
 //			ProcessInstance instance = runtimeService.startProcessInstanceByKey(processDefinitionKey, businessKey,
 //					variables);
