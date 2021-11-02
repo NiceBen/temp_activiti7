@@ -22,6 +22,7 @@ import org.activiti.engine.runtime.ProcessInstanceQuery;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -201,7 +202,7 @@ public class ProcessController extends BaseController {
 	 */
 	@RequestMapping(value = "/startByKey")
 	@ResponseBody
-	public String startByKey(HttpServletRequest request, HttpServletResponse response) {
+	public String startByKey(HttpServletRequest request, HttpServletResponse response, @RequestBody CommonVariable commonVariable) {
 
 		String processDefinitionKey = request.getParameter("processDefinitionKey");
 		String variable = request.getParameter("variable");
@@ -216,6 +217,9 @@ public class ProcessController extends BaseController {
 				CommonVariable variablesEntity = JSON.parseObject(variable, CommonVariable.class);
 				variables = BeanUtil.beanToMap(variablesEntity);
 			}
+
+			// 将 JSON 传递的参数变更
+			variables = BeanUtil.beanToMap(commonVariable);
 
 			ProcessInstance instance = runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
 //			// Businesskey:业务标识，通常为业务表的主键，业务标识和流程实例一一对应。业务标识来源于业务系统。存储业务标识就是根据业务标识来关联查询业务系统的数据
